@@ -6,15 +6,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/spc13/cobra"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	
+
 	pb "github.com/yjuw/serialreader-server/proto"
 )
 
-var {
+var (
 	name string
-}
+)
 
 func init() {
 	helloCmd.Flags().StringVarP(&name, "name", "n", "Anonymous", "The name to send the server.")
@@ -26,7 +26,7 @@ func init() {
 
 func doHello() {
 	conn, err := grpc.Dial(
-		fmt.Sprintf(":%v", port1),
+		fmt.Sprintf(":%v", port),
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 	)
@@ -45,14 +45,14 @@ func doHello() {
 		log.Fatalf("could not greet: %v", err)
 	}
 
-	log.Printf("Server Response: %s", r.Getmessage())
+	log.Printf("Server Response: %s", r.GetMessage())
 }
 
 var helloCmd = &cobra.Command{
-	Use: "hello",
+	Use:   "hello",
 	Short: "Send hello message to gRPC server",
-	Long: `Connect to the gRPC server and send a hello message. Command used to test out that the server is running.`,
+	Long:  `Connect to the gRPC server and send a hello message. Command used to test out that the server is running.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		doHello()
-	}
+	},
 }
