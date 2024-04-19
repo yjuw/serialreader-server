@@ -11,14 +11,18 @@ import (
 )
 
 type SerialReaderServer struct {
-	port       int
-	grpcServer *grpc.Server
+	port              int
+	arduinoDevicePath string
+	arduinoReader     *ArduinoReader
+	grpcServer        *grpc.Server
 }
 
-func New(port int) *SerialReaderServer {
+func New(arduinoDevicePath string, port int) *SerialReaderServer {
 	return &SerialReaderServer{
-		port:       port,
-		grpcServer: nil,
+		port:              port,
+		arduinoDevicePath: arduinoDevicePath,
+		arduinoReader:     nil,
+		grpcServer:        nil,
 	}
 }
 
@@ -32,11 +36,15 @@ func (s *SerialReaderServer) RunMainRuntimeLoop() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	// Establish our device connection.
+	arduinoReader := NewArduinoReader(s.arduinoDevicePath)
+
 	// Initialize our gRPC server using our TCP server.
 	grpcServer := grpc.NewServer()
 
 	// Save reference to our application state.
 	s.grpcServer = grpcServer
+	s.arduinoReader = arduinoReader
 
 	// For debugging purposes only.
 	log.Printf("gRPC server is running.")
@@ -45,7 +53,7 @@ func (s *SerialReaderServer) RunMainRuntimeLoop() {
 	pb.RegisterSerialReaderServer(grpcServer, &SerialReaderServerImpl{
 		// DEVELOPERS NOTE:
 		// We want to attach to every gRPC call the following variables...
-		// ...
+		arduinoReader: arduinoReader,
 	})
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -56,6 +64,8 @@ func (s *SerialReaderServer) RunMainRuntimeLoop() {
 // the process has been finished.
 func (s *SerialReaderServer) StopMainRuntimeLoop() {
 	log.Printf("Starting graceful shutdown now...")
+
+	s.arduinoReader = nil
 
 	// Finish any RPC communication taking place at the moment before
 	// shutting down the gRPC server.

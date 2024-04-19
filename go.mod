@@ -3,7 +3,9 @@ module github.com/yjuw/serialreader-server
 go 1.22.0
 
 require (
+	github.com/golang/protobuf v1.5.4
 	github.com/spf13/cobra v1.8.0
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 )
